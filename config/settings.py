@@ -27,13 +27,27 @@ MODEL_NAME: str = os.getenv("MODEL_NAME", _get_default_model(LLM_PROVIDER))
 MODEL_TEMPERATURE: float = float(os.getenv("MODEL_TEMPERATURE", "0.3"))
 
 # ── API Keys ────────────────────────────────────────────────────────
-OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
-ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
-GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
+def _get_secret(key: str, default: str = "") -> str:
+    # Try environment variable first
+    val = os.getenv(key)
+    if val: return val
+    
+    # Try Streamlit Secrets as fallback
+    try:
+        import streamlit as st
+        if key in st.secrets:
+            return st.secrets[key]
+    except Exception:
+        pass
+    return default
+
+OPENAI_API_KEY: str = _get_secret("OPENAI_API_KEY", "")
+ANTHROPIC_API_KEY: str = _get_secret("ANTHROPIC_API_KEY", "")
+GOOGLE_API_KEY: str = _get_secret("GOOGLE_API_KEY", "")
 
 # ── Developer Mock Mode ──────────────────────────────────────────
 # Set to True to run the agent without calling OpenAI (uses rule-based logic).
-MOCK_MODE: bool = os.getenv("MOCK_MODE", "false").lower() == "true"
+MOCK_MODE: bool = _get_secret("MOCK_MODE", "false").lower() == "true"
 
 # ── Agent Behaviour ────────────────────────────────────────────────
 MAX_CONVERSATION_TURNS: int = 10
