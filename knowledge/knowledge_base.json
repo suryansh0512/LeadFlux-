@@ -1,0 +1,62 @@
+{
+  "product": {
+    "name": "AutoStream",
+    "tagline": "Automated Video Editing Tools for Content Creators",
+    "description": "AutoStream is a SaaS platform that provides automated video editing tools specifically designed for content creators. Our AI-powered platform helps creators edit, caption, and optimize their videos in minutes instead of hours."
+  },
+  "plans": [
+    {
+      "name": "Basic Plan",
+      "price": "$29/month",
+      "features": [
+        "10 videos per month",
+        "720p export quality",
+        "Basic auto-editing tools",
+        "Standard templates library",
+        "Email support (business hours)"
+      ],
+      "best_for": "Hobbyist creators just getting started with content creation"
+    },
+    {
+      "name": "Pro Plan",
+      "price": "$79/month",
+      "features": [
+        "Unlimited videos per month",
+        "4K export quality",
+        "AI-powered captions and subtitles",
+        "Advanced auto-editing with AI scene detection",
+        "Premium templates library",
+        "Priority rendering queue",
+        "24/7 dedicated support"
+      ],
+      "best_for": "Professional content creators and agencies who need unlimited output and premium quality"
+    }
+  ],
+  "policies": {
+    "refund": "Full refund available within the first 7 days of subscription. No refunds are processed after the 7-day window.",
+    "support": {
+      "basic": "Email support during business hours (Mon-Fri, 9 AM - 6 PM EST).",
+      "pro": "24/7 dedicated support via email, live chat, and phone."
+    },
+    "trial": "No free trial is currently offered. However, the 7-day refund policy lets you try risk-free.",
+    "cancellation": "You can cancel your subscription at any time. Access continues until the end of your current billing period."
+  },
+  "faq": [
+    {
+      "question": "What video formats does AutoStream support?",
+      "answer": "AutoStream supports MP4, MOV, AVI, and WebM formats for both import and export."
+    },
+    {
+      "question": "Can I upgrade from Basic to Pro mid-cycle?",
+      "answer": "Yes! You can upgrade at any time. We'll prorate the remaining days on your Basic plan and apply the credit to your Pro subscription."
+    },
+    {
+      "question": "Does AutoStream work with YouTube and TikTok?",
+      "answer": "Absolutely. AutoStream integrates directly with YouTube, TikTok, Instagram Reels, and Twitter/X for one-click publishing."
+    },
+    {
+      "question": "What are AI captions?",
+      "answer": "AI captions are automatically generated subtitles powered by advanced speech recognition. They support 30+ languages and are available exclusively on the Pro plan."
+    }
+  ]
+}

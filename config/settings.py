@@ -1,0 +1,41 @@
+"""
+Configuration settings for the AutoStream LeadFlux Agent.
+
+Centralizes model selection and parameters for easy swapping.
+To change the LLM, simply update MODEL_NAME below or set
+the MODEL_NAME environment variable.
+"""
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# ── LLM Configuration ──────────────────────────────────────────────
+# Swap models by changing MODEL_NAME. Supported: any OpenAI chat model.
+# Examples OpenAI: "gpt-4o-mini", "gpt-4o"
+# Examples Anthropic: "claude-3-5-sonnet-20240620"
+# Examples Google: "gemini-1.5-pro", "gemini-1.5-flash"
+LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "openai").lower()
+
+def _get_default_model(provider: str) -> str:
+    if provider == "google": return "gemini-1.5-flash"
+    if provider == "anthropic": return "claude-3-5-sonnet-20240620"
+    return "gpt-4o-mini"
+
+MODEL_NAME: str = os.getenv("MODEL_NAME", _get_default_model(LLM_PROVIDER))
+MODEL_TEMPERATURE: float = float(os.getenv("MODEL_TEMPERATURE", "0.3"))
+
+# ── API Keys ────────────────────────────────────────────────────────
+OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
+GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
+
+# ── Developer Mock Mode ──────────────────────────────────────────
+# Set to True to run the agent without calling OpenAI (uses rule-based logic).
+MOCK_MODE: bool = os.getenv("MOCK_MODE", "false").lower() == "true"
+
+# ── Agent Behaviour ────────────────────────────────────────────────
+MAX_CONVERSATION_TURNS: int = 10
+PRODUCT_NAME: str = "AutoStream"
+COMPANY_TAGLINE: str = "Automated Video Editing Tools for Content Creators"
