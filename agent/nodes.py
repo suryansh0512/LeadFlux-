@@ -62,22 +62,20 @@ def classify_intent(state: AgentState) -> Dict[str, Any]:
     lead_captured = state.get("lead_captured", False)
 
     # If already in lead capture flow and not yet complete, stay there
-    has_partial_lead = any(
-        lead_info.get(f) for f in ["name", "email", "creator_platform"]
-    )
+    is_already_capturing = state.get("current_intent") == "high_intent_lead"
     all_collected = all(
         lead_info.get(f) for f in ["name", "email", "creator_platform"]
     )
 
-    if has_partial_lead and not all_collected and not lead_captured:
+    if is_already_capturing and not all_collected and not lead_captured:
         return {"current_intent": "high_intent_lead"}
 
     # Extract latest message
     user_message = messages[-1]["content"] if messages else ""
 
     if MOCK_MODE:
-        msg_lower = user_message.lower()
-        if any(w in msg_lower for w in ["hi", "hello", "hey", "greeting"]):
+        msg_lower = f" {user_message.lower()} "
+        if any(f" {w} " in msg_lower for w in ["hi", "hello", "hey", "greeting"]):
             return {"current_intent": "casual_greeting"}
         if any(w in msg_lower for w in ["price", "plan", "cost", "feature", "refund", "faq", "format"]):
             return {"current_intent": "product_pricing_inquiry"}
@@ -160,6 +158,7 @@ def _extract_fields(user_message: str, collected: Dict[str, Optional[str]]) -> D
     if MOCK_MODE:
         extracted: Dict[str, Optional[str]] = {}
         msg = user_message.lower()
+        print(f"DEBUG: Extracting from '{msg}'")
         
         # Simple heuristic for mock mode
         if "@" in msg and "." in msg:
@@ -176,8 +175,8 @@ def _extract_fields(user_message: str, collected: Dict[str, Optional[str]]) -> D
                     
         # If there's a name-like phrase or just a capitalized word that isn't a platform
         if "my name is" in msg:
-            name_part = user_message.split("my name is")[-1].strip()
-            extracted["name"] = name_part.split(".")[0].strip()
+            name_part = msg.split("my name is")[-1].strip()
+            extracted["name"] = name_part.split(".")[0].strip().capitalize()
         elif not extracted.get("email") and not extracted.get("creator_platform") and len(user_message.split()) <= 3:
             # Assume short message is a name if no other field detected
             extracted["name"] = user_message.strip(".,!")

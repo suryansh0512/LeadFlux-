@@ -23,7 +23,7 @@ def mock_lead_capture(name: str, email: str, platform: str) -> str:
         A confirmation string.
     """
     print(f"\n{'='*50}")
-    print(f"  🎯 LEAD CAPTURED SUCCESSFULLY")
+    print(f"  [SUCCESS] LEAD CAPTURED SUCCESSFULLY")
     print(f"{'='*50}")
     print(f"  Name:     {name}")
     print(f"  Email:    {email}")
