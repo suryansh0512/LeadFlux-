@@ -1,105 +1,73 @@
-# AutoStream LeadFlux
+# AutoStream LeadFlux: AI Sales Agent
 
-Conversational AI sales agent for **AutoStream** (automated video editing SaaS). Built with LangGraph + LangChain.
+AutoStream LeadFlux is a production-grade conversational AI agent designed to automate lead generation and product inquiries for video creators. Built with **LangGraph** and **Streamlit**, it features a robust RAG (Retrieval-Augmented Generation) system and multi-turn state management.
 
-Classifies user intent, answers product questions from a local knowledge base (no hallucination), and runs a multi-turn lead capture flow with tool gating.
+---
 
-## Architecture
+## 🚀 How to Run Locally
 
-```
-User Input → classify_intent → ┬─ casual_greeting    → friendly response
-                                ├─ product_pricing    → RAG lookup → grounded answer
-                                └─ high_intent_lead   → collect name/email/platform → mock_lead_capture()
-```
+### 1. Prerequisites
+- Python 3.10+
+- OpenAI, Anthropic, or Google Gemini API Key
 
-The whole thing is a LangGraph state machine — each node gets the full conversation state, does its thing, and returns a partial update. Routing is a conditional edge off the classifier.
-
-## Project Layout
-
-```
-├── main.py                  # CLI chat loop
-├── agent/
-│   ├── graph.py             # LangGraph workflow
-│   ├── nodes.py             # classify, greet, rag, lead capture nodes
-│   ├── state.py             # AgentState (TypedDict)
-│   └── tools.py             # mock_lead_capture
-├── knowledge/
-│   ├── knowledge_base.json  # product data, plans, policies, FAQ
-│   └── retriever.py         # keyword-based retriever
-├── config/
-│   └── settings.py          # model config, swappable via env vars
-├── prompts/
-│   └── templates.py         # all prompt templates in one place
-├── tests/
-│   ├── test_agent.py        # integration tests (needs API key)
-│   └── test_knowledge.py    # retriever tests (no API key needed)
-└── docs/
-    ├── demo_script.md       # 2-3 min demo walkthrough
-    └── sample_conversations.md
-```
-
-## Interface Options
-
-The project now supports two interfaces:
-
-1.  **CLI (Terminal)**: Best for quick tests and development.
-    ```bash
-    python main.py
-    ```
-2.  **Web UI (Streamlit)**: A premium, interview-ready chat interface.
-    ```bash
-    streamlit run app.py
-    ```
-
-## Hosting & Deployment
-
-The project is ready for hosting on **Render**, **Railway**, or **Streamlit Cloud**.
-
-### Deploy to Render (Recommended)
-1.  Connect your GitHub repo to **Render**.
-2.  Create a new **Web Service**.
-3.  Set the build command to `pip install -r requirements.txt` and the start command to `streamlit run app.py`.
-4.  Add your `OPENAI_API_KEY` (or `ANTHROPIC_API_KEY`) to the environment variables.
-
-### Deploy with Docker
-The included `Dockerfile` allows for easy deployment on any container platform:
+### 2. Setup
 ```bash
-docker build -t autostream-agent .
-docker run -p 8501:8501 --env-file .env autostream-agent
+# Clone the repository
+git clone https://github.com/suryansh0512/LeadFlux-.git
+cd LeadFlux-
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure environment
+copy .env.example .env
+# Edit .env and add your API key (OPENAI_API_KEY, ANTHROPIC_API_KEY, or GOOGLE_API_KEY)
 ```
 
-## Configuration
+### 3. Launch
+- **Web Interface (Recommended)**:
+  ```bash
+  streamlit run app.py
+  ```
+- **CLI Interface**:
+  ```bash
+  python main.py
+  ```
 
-Set these in `.env` or export them:
+---
 
-| Variable | Default | What it does |
-|---|---|---|
-| `OPENAI_API_KEY` | — | Required |
-| `MODEL_NAME` | `gpt-4o-mini` | Any OpenAI chat model |
-| `MODEL_TEMPERATURE` | `0.3` | Lower = more deterministic |
+## 🏗️ Architecture Explanation
 
-## How the pieces fit together
+### Why LangGraph?
+We chose **LangGraph** over simpler frameworks like AutoGen or basic chains because of its focus on **controllable, cyclic workflows**. Lead capture and sales inquiries are rarely linear; they require loops (e.g., asking for missing fields until complete) and precise routing. LangGraph allows us to define the agent as a state machine where nodes represent logical steps (classification, retrieval, extraction) and edges define the conditional transitions. This ensures the agent doesn't "hallucinate" its way out of the sales funnel and follows a predictable business logic.
 
-**Intent classification** — Every user message hits a classifier prompt first. Three buckets: greeting, product question, or sign-up intent. If we're mid-lead-capture (some fields collected), we skip re-classification and stay in that flow.
+### State Management
+State is managed using a centralized **AgentState** schema (built on Python's `TypedDict`). This state acts as the "single source of truth" that persists throughout the conversation. It tracks:
+- **Messages**: The full conversation history.
+- **Intent**: The current classification (Greeting, Inquiry, or Lead).
+- **Lead Info**: A structured dictionary (Name, Email, Platform) that is updated incrementally across turns.
+- **Metadata**: Flags like `lead_captured` to trigger backend tools only when conditions are met.
+Each node in the graph receives this state, performs a specific transformation, and returns only the fields it modified, ensuring clean and traceable data flow.
 
-**RAG retrieval** — Product answers come from `knowledge_base.json` via keyword overlap scoring. No vector DB, no embeddings. The retriever flattens the JSON into chunks, scores them against the query, and returns the top-k. Simple, transparent, easy to debug.
+---
 
-**Lead capture** — When the user shows purchase intent, we collect three fields across turns: name, email, platform. Each turn, an extraction prompt pulls whatever info is in the message. `mock_lead_capture()` only fires once all three are present — never prematurely.
+## 💬 WhatsApp Deployment (Webhooks)
 
-## Tests
+To integrate this agent with WhatsApp, we would use a **Webhook-based architecture** using the **Meta WhatsApp Business API** or **Twilio**.
 
-```bash
-# These don't need an API key
-pytest tests/test_knowledge.py -v
+### Integration Workflow:
+1.  **Incoming Message**: A user sends a message on WhatsApp.
+2.  **Webhook Trigger**: WhatsApp/Twilio sends an HTTP POST request (Webhook) to our backend server (e.g., a FastAPI or Flask app).
+3.  **Agent Processing**: The backend extracts the text, identifies the user's `From` number (as a unique session ID), and invokes the **LangGraph Agent** with the existing state for that ID.
+4.  **Response Generation**: The agent retrieves data from the knowledge base or extracts lead info and returns a structured response.
+5.  **Outgoing Message**: The backend uses the WhatsApp API to send the generated response back to the user's phone number.
+6.  **Persistence**: The conversation state is stored in a database (like PostgreSQL or Redis) between messages to maintain context across the asynchronous webhook calls.
 
-# These call the LLM
-pytest tests/test_agent.py -v
-```
+---
 
-## Design choices worth noting
-
-- **LangGraph** over raw chains — explicit state machine, easier to reason about and debug
-- **JSON knowledge base** — no external dependencies, fully auditable, easy to extend
-- **Keyword retrieval** over embeddings — transparent scoring, easy to explain in a review
-- **All prompts in one file** — `prompts/templates.py` makes it easy to review and tweak
-- **Tool gating** — the capture tool is only called on completion, not on partial data
+## 🛠️ Tech Stack
+- **Framework**: LangGraph (LangChain)
+- **UI**: Streamlit
+- **LLMs**: GPT-4o-mini / Claude 3.5 Sonnet / Gemini 1.5 Flash
+- **Database**: Local JSON Knowledge Base (RAG)
+- **DevOps**: Docker
